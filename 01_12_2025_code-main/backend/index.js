@@ -22,6 +22,12 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://attendance-system-git-main-namwhan111s-projects.vercel.app/',
+  credentials: true
+}));
+mini2-nine.vercel.app
+
 // ===== API routes =====
 app.use(subjectRoute);
 app.use(stdRoute);
@@ -45,6 +51,7 @@ app.use(express.static(path.join(__dirname, "dist")));
 app.get("/", (req, res) => {
   res.send("Service is live");
 });
+
 // ===== start server =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
