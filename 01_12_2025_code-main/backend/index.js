@@ -42,6 +42,9 @@ app.use(express.static(path.join(__dirname, "dist")));
 //   res.sendFile(path.join(__dirname, "dist", "index.html"));
 // });
 
+app.get("/", (req, res) => {
+  res.send("Service is live");
+});
 // ===== start server =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
