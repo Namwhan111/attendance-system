@@ -23,7 +23,10 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "https://attendance-system-phi-six.vercel.app",
+  origin: [
+    "https://attendance-system-phi-six.vercel.app",
+    "https://attendance-system-git-main-namwhan111s-projects.vercel.app"
+  ],
   credentials: true
 }));
 
