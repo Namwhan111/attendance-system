@@ -1,34 +1,49 @@
-const express = require("express");
-const { default: subjectRoute } = require("./routes/subject.route");
-const cors = require("cors");
-const app = express();
-require("dotenv").config();
-const morgan = require("morgan");
-const path = require("path");
-const { default: stdRoute } = require("./routes/std.route.js");
-const { default: pRouter } = require("./routes/professor.route.js");
-const { default: dbRouter } = require("./routes/dashboard.route.js");
+import express from "express";
+import subjectRoute from "./routes/subject.route.js";
+import cors from "cors";
+import dotenv from "dotenv";
+import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
+import stdRoute from "./routes/std.route.js";
+import pRouter from "./routes/professor.route.js";
+import dbRouter from "./routes/dashboard.route.js";
 
+dotenv.config();
+
+const app = express();
+
+// สำหรับ ES Modules ต้องสร้าง __dirname เอง
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ===== middleware =====
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
+// ===== API routes =====
 app.use(subjectRoute);
 app.use(stdRoute);
 app.use(pRouter);
 app.use(dbRouter);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.get("/health", async (req, res) => {
+// ===== health check =====
+app.get("/health", (req, res) => {
   res.json({ status: "OK" });
 });
 
-app.get("/", (req, res) => {
-  res.send("Attendance API running");
-});
+// ===== serve frontend (React/Vite dist) =====
+app.use(express.static(path.join(__dirname, "dist")));
 
+// 🔴 แก้ตรงนี้
+// app.get("/*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "dist", "index.html"));
+// });
+
+// ===== start server =====
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log("Server start at port :", PORT);
 });
