@@ -60,24 +60,28 @@ stdRoute.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ err: "กรุณากรอก username และ password" });
-    }
+    console.log("login:", username, password);
 
     let role = 1;
-    let query = "select * from students where username = $1 and password = $2";
+    let query = "SELECT * FROM students WHERE username = $1";
+    let result = await pool.query(query, [username]);
 
-    let result = await pool.query(query, [username, password]);
-    if (result.rows.length < 1) {
-      query = "select * from professors where username = $1 and password = $2";
+    if (result.rows.length > 0) {
+      if (result.rows[0].password !== password) {
+        return res.status(401).json({ err: "password incorrect" });
+      }
+    } else {
+      query = "SELECT * FROM professors WHERE username = $1";
       role = 2;
-      result = await pool.query(query, [username, password]);
-    }
-    console.log("🚀 ~ query:", query);
+      result = await pool.query(query, [username]);
 
-    console.log("🚀 ~ result.rows:", result.rows);
-    if (result.rows.length === 0) {
-      return res.status(401).json({ err: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
+      if (result.rows.length === 0) {
+        return res.status(401).json({ err: "user not found" });
+      }
+
+      if (result.rows[0].password !== password) {
+        return res.status(401).json({ err: "password incorrect" });
+      }
     }
 
     return res.status(200).json({
