@@ -45,12 +45,10 @@ export default function MyProfile() {
         std_class_id: res?.data?.data?.std_class_id,
       });
       const splitProfile = res.data.data?.profile?.split("\\");
-      const profilePath =
-        splitProfile[0] + "/" + splitProfile[1] + "/" + splitProfile[2];
       setPreviewProfile(
         res.data?.data?.profile
-          ? API_URL + "/" + profilePath
-          : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_lvjjRAVDQ-nBDq_4dy1xCyRjjDaHV-Tqcw&s",
+          ? `${API_URL}/${res.data.data.profile}`
+          : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_lvjjRAVDQ-nBDq_4dy1xCyRjjDaHV-Tqcw&s"
       );
     } catch (error) {
       console.error(error);
@@ -71,29 +69,37 @@ export default function MyProfile() {
     }));
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setMessage("");
-  try {
-    const data = new FormData();
-    data.append("fullname", formData.fullname);  // ✅ แก้ตรงนี้
-    data.append("major", formData.major);
-    if (profileFile instanceof File) {           // ✅ ส่งรูปเฉพาะตอนเลือกไฟล์ใหม่
-      data.append("profile", profileFile);
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    try {
+      const data = new FormData();
+      data.append("fullname", formData.fullname);  // ✅ แก้ตรงนี้
+      data.append("major", formData.major);
+      if (profileFile instanceof File) {           // ✅ ส่งรูปเฉพาะตอนเลือกไฟล์ใหม่
+        data.append("profile", profileFile);
+      }
 
-    await axios.put(`${API_URL}/students/${formData.stundent_id}`, data);
-    setMessage("บันทึกข้อมูลสำเร็จ!");
-    setIsEditing(false);
-    getData();
-  } catch (error) {
-    setMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-    console.error("Error:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+      await axios.put(
+        `${API_URL}/students/${formData.stundent_id}`,
+        data,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setMessage("บันทึกข้อมูลสำเร็จ!");
+      setIsEditing(false);
+      getData();
+    } catch (error) {
+      setMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (load) {
     return (
@@ -114,7 +120,7 @@ export default function MyProfile() {
       <div className="max-w-4xl mx-auto">
         {/* Header with Navigation */}
         <div className="mb-8 flex items-center justify-between">
-        
+
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
