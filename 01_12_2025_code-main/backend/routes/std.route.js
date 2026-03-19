@@ -371,7 +371,57 @@ FROM students
   }
 });
 
-stdRoute.post("/check-class", async (req, res) => {
+// stdRoute.post("/check-class", async (req, res) => {
+//   try {
+//     const { classId, stdId } = req.body;
+//     const filePath = req.file ? req.file.path : null;
+
+//     if (!classId || !stdId) {
+//       return res.status(400).json({ err: "ข้อมูลไม่ครบ" });
+//     }
+
+//     // 🔹 ใช้เวลา server
+//     const checkinTime = new Date();
+
+//     // 🔹 ดึงเวลาเข้าเรียนจาก courses
+//     const courseResult = await pool.query(
+//       `SELECT time_check FROM courses WHERE course_id = $1`,
+//       [classId],
+//     );
+
+//     if (courseResult.rows.length === 0) {
+//       return res.status(404).json({ err: "ไม่พบวิชาเรียน" });
+//     }
+
+//     const timeCheck = courseResult.rows[0].time_check; // TIME
+
+//     // 🔹 ดึงเฉพาะเวลา (HH:mm:ss) จาก checkinTime
+//     const checkinTimeOnly = checkinTime.toTimeString().slice(0, 8); // "HH:mm:ss"
+
+//     // 🔥 ตัดสินสถานะ
+//     const status = checkinTimeOnly > timeCheck ? "มาสาย" : "ตรงเวลา";
+
+//     // 🔹 บันทึกข้อมูล
+//     const query = `
+//         INSERT INTO attendance
+//         (course_id, student_id, checkin_time, status, leave_file)
+//         VALUES ($1, $2, NOW(), $3, $4)
+//       `;
+
+//     await pool.query(query, [classId, stdId, status, filePath]);
+
+//     res.json({
+//       ok: true,
+//       status,
+//       checkin_time: checkinTime,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ err: "Check-in failed" });
+//   }
+// });
+
+stdRoute.post("/check-class", upload.single("leavDoc"), async (req, res) => {
   try {
     const { classId, stdId } = req.body;
     const filePath = req.file ? req.file.path : null;
@@ -380,35 +430,49 @@ stdRoute.post("/check-class", async (req, res) => {
       return res.status(400).json({ err: "ข้อมูลไม่ครบ" });
     }
 
-    // 🔹 ใช้เวลา server
+    // ✅ เช็คว่า enroll แล้วหรือยัง
+    const enrollCheck = await pool.query(
+      `SELECT * FROM enrollments WHERE student_id = $1 AND course_id = $2`,
+      [stdId, classId]
+    );
+
+    if (enrollCheck.rows.length === 0) {
+      return res.status(400).json({ err: "ยังไม่ได้ลงทะเบียนวิชานี้" });
+    }
+
     const checkinTime = new Date();
 
-    // 🔹 ดึงเวลาเข้าเรียนจาก courses
     const courseResult = await pool.query(
       `SELECT time_check FROM courses WHERE course_id = $1`,
-      [classId],
+      [classId]
     );
 
     if (courseResult.rows.length === 0) {
       return res.status(404).json({ err: "ไม่พบวิชาเรียน" });
     }
 
-    const timeCheck = courseResult.rows[0].time_check; // TIME
+    const timeCheck = courseResult.rows[0].time_check;
+    const checkinTimeOnly = checkinTime.toTimeString().slice(0, 8);
 
-    // 🔹 ดึงเฉพาะเวลา (HH:mm:ss) จาก checkinTime
-    const checkinTimeOnly = checkinTime.toTimeString().slice(0, 8); // "HH:mm:ss"
+    const status = checkinTimeOnly > timeCheck ? "มาสาย" : "มาเรียน";
 
-    // 🔥 ตัดสินสถานะ
-    const status = checkinTimeOnly > timeCheck ? "มาสาย" : "ตรงเวลา";
+    // ✅ กันกดซ้ำ (สำคัญมาก)
+    const alreadyCheck = await pool.query(
+      `SELECT * FROM attendance 
+       WHERE student_id = $1 AND course_id = $2 AND DATE(checkin_time) = CURRENT_DATE`,
+      [stdId, classId]
+    );
 
-    // 🔹 บันทึกข้อมูล
-    const query = `
-        INSERT INTO attendance
-        (course_id, student_id, checkin_time, status, leave_file)
-        VALUES ($1, $2, NOW(), $3, $4)
-      `;
+    if (alreadyCheck.rows.length > 0) {
+      return res.status(400).json({ err: "เช็คชื่อไปแล้ววันนี้" });
+    }
 
-    await pool.query(query, [classId, stdId, status, filePath]);
+    await pool.query(
+      `INSERT INTO attendance
+       (course_id, student_id, checkin_time, status, leave_file)
+       VALUES ($1, $2, NOW(), $3, $4)`,
+      [classId, stdId, status, filePath]
+    );
 
     res.json({
       ok: true,
@@ -416,7 +480,7 @@ stdRoute.post("/check-class", async (req, res) => {
       checkin_time: checkinTime,
     });
   } catch (err) {
-    console.error(err);
+    console.error("🔥 CHECK CLASS ERROR:", err);
     res.status(500).json({ err: "Check-in failed" });
   }
 });
