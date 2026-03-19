@@ -163,7 +163,7 @@ export default function Teachers() {
                   อาจารย์ทั้งหมด: {teachers.length} คน
                 </span>
               </div>
-              <div className="text-sm bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+              <div className="text-sm text-black bg-white bg-opacity-20 px-4 py-2 rounded-lg">
                 แสดง {teachers.length} รายการ
               </div>
             </div>
