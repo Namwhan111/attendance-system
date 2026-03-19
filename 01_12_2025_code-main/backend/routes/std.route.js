@@ -315,7 +315,7 @@ FROM students
   }
 });
 
-stdRoute.post("/check-class", upload.single("leavDoc"), async (req, res) => {
+stdRoute.post("/check-class", async (req, res) => {
   try {
     const { classId, stdId } = req.body;
     const filePath = req.file ? req.file.path : null;
