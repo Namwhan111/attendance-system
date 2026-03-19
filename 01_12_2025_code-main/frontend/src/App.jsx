@@ -10,6 +10,7 @@ import CheckClass from "./pages/CheckClass";
 import StudentAttendanceDetail from "./pages/ClassDetail";
 import StdCheckClass from "./pages/StdCheckClass";
 import ProfessorProfile from "./pages/TeacherProfile";
+import Teachers from "./pages/Teachers";
 function App() {
   return (
     <Router>
@@ -31,6 +32,7 @@ function App() {
           element={<StdCheckClass />}
         />
         <Route path="/teacher-profile" element={<ProfessorProfile />} />
+        <Route path="/teachers" element={<Teachers />} />
       </Routes>
     </Router>
   );
