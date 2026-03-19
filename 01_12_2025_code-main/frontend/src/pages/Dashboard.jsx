@@ -380,57 +380,7 @@ function Dashboard() {
         {/* Stats Grid */}
         <DashboardStat />
 
-        {/* Management Section */}
-        <div className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden">
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200 bg-gray-50">
-            <button
-              onClick={() => {
-                (setActiveTab("students"), setTableData(students));
-              }}
-              className={`flex-1 py-4 px-6 font-semibold transition-all ${
-                activeTab === "students"
-                  ? "bg-white text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <GraduationCap className="w-5 h-5" />
-                นักศึกษา
-              </div>
-            </button>
-            <button
-              onClick={() => {
-                (setActiveTab("teachers"), setTableData(teachers));
-              }}
-              className={`flex-1 py-4 px-6 font-semibold transition-all ${
-                activeTab === "teachers"
-                  ? "bg-white text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <User className="w-5 h-5" />
-                อาจารย์
-              </div>
-            </button>
-            <button
-              onClick={() => {
-                (setActiveTab("subjects"), setTableData(subjects));
-              }}
-              className={`flex-1 py-4 px-6 font-semibold transition-all ${
-                activeTab === "subjects"
-                  ? "bg-white text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                รายวิชา
-              </div>
-            </button>
-           </div>
-          </div>
+
         </div>
      </div>
   );
