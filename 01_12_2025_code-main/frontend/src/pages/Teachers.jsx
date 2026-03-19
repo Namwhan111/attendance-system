@@ -25,6 +25,7 @@ export default function Teachers() {
     fullname: "",
     username: "",
     password: "",
+    tel: "",
   });
 
   const getAll = async () => {
@@ -47,32 +48,31 @@ export default function Teachers() {
     setFormData({
       fullname: teacher.fullname,
       username: teacher.username,
-      password: "", // ไม่โหลด password เดิม
+      password: "",
+      tel: teacher.tel || "",
     });
     setIsModalOpen(true);
   };
 
   const handleAdd = () => {
     setEditingTeacher(null);
-    setFormData({ fullname: "", username: "", password: "" });
+    setFormData({ fullname: "", username: "", password: "", tel: "" });
     setIsModalOpen(true);
   };
 
   const resetForm = () => {
     setIsModalOpen(false);
     setEditingTeacher(null);
-    setFormData({ fullname: "", username: "", password: "" });
+    setFormData({ fullname: "", username: "", password: "", tel: "" });
   };
 
   const handleSubmit = async () => {
     if (!formData.fullname || !formData.username) {
       return Swal.fire("กรุณากรอกข้อมูลให้ครบ", "", "warning");
     }
-    // เช็ค password เฉพาะตอนเพิ่มใหม่
     if (!editingTeacher && !formData.password) {
       return Swal.fire("กรุณากรอกรหัสผ่าน", "", "warning");
     }
-
     try {
       setSaving(true);
       if (editingTeacher) {
@@ -80,13 +80,11 @@ export default function Teachers() {
           `${API_URL}/update-professor/${editingTeacher.id}`,
           formData
         );
-        if (res.data.err)
-          return Swal.fire(res.data.err, "", "warning");
+        if (res.data.err) return Swal.fire(res.data.err, "", "warning");
         Swal.fire("แก้ไขข้อมูลแล้ว", "", "success");
       } else {
         const res = await axios.post(`${API_URL}/create-professor`, formData);
-        if (res.data.err)
-          return Swal.fire(res.data.err, "", "warning");
+        if (res.data.err) return Swal.fire(res.data.err, "", "warning");
         Swal.fire("เพิ่มอาจารย์แล้ว", "", "success");
       }
       getAll();
@@ -111,7 +109,6 @@ export default function Teachers() {
       denyButtonColor: "#6B7280",
     });
     if (!isConfirmed) return;
-
     try {
       await axios.delete(`${API_URL}/delete-professor/${id}`);
       Swal.fire("ลบข้อมูลแล้ว", "", "success");
@@ -131,7 +128,6 @@ export default function Teachers() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-             
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
@@ -163,7 +159,6 @@ export default function Teachers() {
                   อาจารย์ทั้งหมด: {teachers.length} คน
                 </span>
               </div>
-
             </div>
           </div>
 
@@ -180,6 +175,9 @@ export default function Teachers() {
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
                     Username
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                    เบอร์โทร
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
                     จัดการ
@@ -201,6 +199,9 @@ export default function Teachers() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {teacher.username}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {teacher.tel || "-"}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
@@ -226,7 +227,7 @@ export default function Teachers() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center">
+                    <td colSpan="5" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-3 text-gray-500">
                         <AlertCircle className="w-12 h-12 text-gray-400" />
                         <p className="text-lg font-medium">
@@ -255,7 +256,7 @@ export default function Teachers() {
         </div>
       </div>
 
-      {/* Modal เพิ่ม/แก้ไข */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
@@ -301,7 +302,8 @@ export default function Teachers() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Password {editingTeacher && (
+                  Password{" "}
+                  {editingTeacher && (
                     <span className="text-gray-400 font-normal">
                       (เว้นว่างถ้าไม่ต้องการเปลี่ยน)
                     </span>
@@ -314,7 +316,23 @@ export default function Teachers() {
                     setFormData({ ...formData, password: e.target.value })
                   }
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
-                  placeholder={editingTeacher ? "เว้นว่างถ้าไม่เปลี่ยน" : "รหัสผ่าน"}
+                  placeholder={
+                    editingTeacher ? "เว้นว่างถ้าไม่เปลี่ยน" : "รหัสผ่าน"
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  เบอร์โทร
+                </label>
+                <input
+                  type="tel"
+                  value={formData.tel}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tel: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                  placeholder="08XXXXXXXX"
                 />
               </div>
               <button
