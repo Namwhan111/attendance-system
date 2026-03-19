@@ -67,6 +67,7 @@ export default function Teachers() {
   };
 
   const handleSubmit = async () => {
+    console.log("formData:", formData)
     if (!formData.fullname || !formData.username) {
       return Swal.fire("กรุณากรอกข้อมูลให้ครบ", "", "warning");
     }
