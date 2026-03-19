@@ -49,10 +49,10 @@ export default function CourseCRUD() {
   const [editingCourse, setEditingCourse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-  course_name: "",
-  teacher_id: "",   // ✅ เพิ่มตัวนี้
-  time_check: "",   // ✅ เพิ่มตัวนี้ด้วย
-});
+    course_name: "",
+    teacher_id: "",   // ✅ เพิ่มตัวนี้
+    time_check: "",   // ✅ เพิ่มตัวนี้ด้วย
+  });
 
   // เปลี่ยน URL ตามที่คุณตั้งค่าใน .env
 
@@ -88,33 +88,33 @@ export default function CourseCRUD() {
       setLoading(true);
 
       if (editingCourse) {
-        // Update existing course
-        const { course_id, ...data } = formData;
-
-        const res = await axios.post(`${API_URL}/create-subject`, data);
+        // ✅ Update — เรียก PUT พร้อม course_id
+        const res = await axios.put(
+          `${API_URL}/update-subject/${formData.course_id}`,
+          {
+            course_name: formData.course_name,
+            teacher_id: formData.teacher_id,
+            time_check: formData.time_check,
+          }
+        );
 
         if (res.data.err) {
           return Swal.fire(res.data.err, "ไม่สามารถบันทึกได้", "warning");
         }
 
-        if (res.status === 200 || res.status === 201) {
-          fetchCourses();
-          Swal.fire("บันทึกข้อมูลแล้ว", "", "success");
-        }
+        Swal.fire("แก้ไขข้อมูลแล้ว", "", "success");
       } else {
-        // Add new course
+        // ✅ Create — เรียก POST สร้างใหม่
         const res = await axios.post(`${API_URL}/create-subject`, formData);
 
         if (res.data.err) {
           return Swal.fire(res.data.err, "ไม่สามารถบันทึกได้", "warning");
         }
 
-        if (res.status === 200 || res.status === 201) {
-          fetchCourses();
-          Swal.fire("บันทึกข้อมูลแล้ว", "", "success");
-        }
+        Swal.fire("บันทึกข้อมูลแล้ว", "", "success");
       }
 
+      fetchCourses();
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error saving:", error);
@@ -129,7 +129,7 @@ export default function CourseCRUD() {
     setFormData({
       course_id: course.course_id,
       course_name: course.course_name,
-      teacher_name: course.teacher_name,
+      teacher_id: course.teacher_id,
       time_check: course?.time_check,
     });
     setIsModalOpen(true);

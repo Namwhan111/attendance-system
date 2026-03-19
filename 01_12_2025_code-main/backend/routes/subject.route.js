@@ -100,21 +100,34 @@ subjectRoute.get("/get-subject/:id", async (req, res) => {
 subjectRoute.put("/update-subject/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { course_name, teacher_name } = req.body;
+    const { course_name, teacher_id, time_check } = req.body;
 
-    // ตรวจสอบข้อมูล
-    if (!course_name || !teacher_name) {
+    if (!course_name || !teacher_id || !time_check) {
       return res.status(400).json({
         error: "กรุณากรอกข้อมูลให้ครบทุกช่อง",
       });
     }
 
+    // ดึงชื่ออาจารย์จาก teacher_id เหมือนกับตอน create
+    const teacher = await pool.query(
+      "SELECT fullname FROM professors WHERE id = $1",
+      [teacher_id]
+    );
+    if (teacher.rows.length < 1) {
+      return res.status(404).json({ error: "ไม่พบอาจารย์" });
+    }
+
     const query = `UPDATE courses 
-                   SET course_name = $1, teacher_name = $2 
-                   WHERE course_id = $3 
+                   SET course_name = $1, teacher_name = $2, time_check = $3
+                   WHERE course_id = $4
                    RETURNING *`;
 
-    const result = await pool.query(query, [course_name, teacher_name, id]);
+    const result = await pool.query(query, [
+      course_name,
+      teacher.rows[0].fullname,
+      time_check,
+      id,
+    ]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
