@@ -6,53 +6,110 @@ import path from "path";
 
 const stdRoute = Router();
 
+// stdRoute.post("/create-std", async (req, res) => {
+//   try {
+//     const { fullName, studentId, username, password } = req.body;
+//     if (!fullName || !studentId || !username || !password)
+//       return res.status(400);
+
+//     const isStdExit = `select * from students where std_class_id = $1`;
+//     const findStdIdEsit = await pool.query(isStdExit, [studentId]);
+//     if (findStdIdEsit.rows.length > 0) {
+//       return res.json({
+//         err: "มีข้อมูลรหัสนักศึกษานี้อยู่แล้ว ไม่สามารถลงทะเบียนได้",
+//       });
+//     }
+
+//     const where = `select * from users where username = $1`;
+//     const fintExitStd = await pool.query(where, [username]);
+//     if (fintExitStd.rows.length > 0)
+//       return res.json({
+//         err: "มีข้อมูล username นี้อยู่แล้ว ไม่สามารถลงทะเบียนได้",
+//       });
+
+//     const internToUser = `INSERT INTO users (username,password,role_id) 
+//                    VALUES ($1, $2, $3) RETURNING *`;
+//     const query = `INSERT INTO students (fullname,std_class_id,username,password,major) 
+//                    VALUES ($1, $2, $3, $4, $5) RETURNING *`;
+
+//     const insertUser = await pool.query(internToUser, [username, password, 1]);
+//     const result = await pool.query(query, [
+//       fullName,
+//       studentId,
+//       username,
+//       password,
+//       "IT",
+//     ]);
+//     if (!result) return res.status(400);
+
+//     return res.status(200).json({ ok: true });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json(error);
+//   }
+// });
+
+// stdRoute.post("/create-easy", async (req, res) => {
+//   try {
+//   } catch (error) {
+//     console.error(error);
+//   }
+// });
+
 stdRoute.post("/create-std", async (req, res) => {
+  const client = await pool.connect();
   try {
     const { fullName, studentId, username, password } = req.body;
-    if (!fullName || !studentId || !username || !password)
-      return res.status(400);
 
-    const isStdExit = `select * from students where std_class_id = $1`;
-    const findStdIdEsit = await pool.query(isStdExit, [studentId]);
-    if (findStdIdEsit.rows.length > 0) {
-      return res.json({
-        err: "มีข้อมูลรหัสนักศึกษานี้อยู่แล้ว ไม่สามารถลงทะเบียนได้",
-      });
+    if (!fullName || !studentId || !username || !password) {
+      return res.status(400).json({ err: "กรอกข้อมูลไม่ครบ" });
     }
 
-    const where = `select * from users where username = $1`;
-    const fintExitStd = await pool.query(where, [username]);
-    if (fintExitStd.rows.length > 0)
-      return res.json({
-        err: "มีข้อมูล username นี้อยู่แล้ว ไม่สามารถลงทะเบียนได้",
-      });
+    await client.query("BEGIN");
 
-    const internToUser = `INSERT INTO users (username,password,role_id) 
-                   VALUES ($1, $2, $3) RETURNING *`;
-    const query = `INSERT INTO students (fullname,std_class_id,username,password,major) 
-                   VALUES ($1, $2, $3, $4, $5) RETURNING *`;
+    // 🔹 เช็คซ้ำ student
+    const checkStd = await client.query(
+      "SELECT * FROM students WHERE std_class_id = $1",
+      [studentId]
+    );
+    if (checkStd.rows.length > 0) {
+      await client.query("ROLLBACK");
+      return res.json({ err: "มีรหัสนักศึกษานี้แล้ว" });
+    }
 
-    const insertUser = await pool.query(internToUser, [username, password, 1]);
-    const result = await pool.query(query, [
-      fullName,
-      studentId,
-      username,
-      password,
-      "IT",
-    ]);
-    if (!result) return res.status(400);
+    // 🔹 เช็คซ้ำ username
+    const checkUser = await client.query(
+      "SELECT * FROM users WHERE username = $1",
+      [username]
+    );
+    if (checkUser.rows.length > 0) {
+      await client.query("ROLLBACK");
+      return res.json({ err: "username ซ้ำ" });
+    }
+
+    // 🔹 insert users
+    await client.query(
+      "INSERT INTO users (username,password,role_id) VALUES ($1,$2,$3)",
+      [username, password, 1]
+    );
+
+    // 🔹 insert students
+    await client.query(
+      `INSERT INTO students 
+      (fullname,std_class_id,username,password,major) 
+      VALUES ($1,$2,$3,$4,$5)`,
+      [fullName, studentId, username, password, "IT"]
+    );
+
+    await client.query("COMMIT");
 
     return res.status(200).json({ ok: true });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json(error);
-  }
-});
-
-stdRoute.post("/create-easy", async (req, res) => {
-  try {
-  } catch (error) {
+       } catch (error) {
+    await client.query("ROLLBACK");
     console.error(error);
+    return res.status(500).json({ err: "สมัครไม่สำเร็จ" });
+        } finally {
+    client.release();
   }
 });
 
