@@ -47,7 +47,7 @@ export default function Teachers() {
     setFormData({
       fullname: teacher.fullname,
       username: teacher.username,
-      password: "",
+      password: "", // ไม่โหลด password เดิม
     });
     setIsModalOpen(true);
   };
@@ -65,9 +65,14 @@ export default function Teachers() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.fullname || !formData.username || !formData.password) {
+    if (!formData.fullname || !formData.username) {
       return Swal.fire("กรุณากรอกข้อมูลให้ครบ", "", "warning");
     }
+    // เช็ค password เฉพาะตอนเพิ่มใหม่
+    if (!editingTeacher && !formData.password) {
+      return Swal.fire("กรุณากรอกรหัสผ่าน", "", "warning");
+    }
+
     try {
       setSaving(true);
       if (editingTeacher) {
@@ -307,7 +312,11 @@ export default function Teachers() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Password
+                  Password {editingTeacher && (
+                    <span className="text-gray-400 font-normal">
+                      (เว้นว่างถ้าไม่ต้องการเปลี่ยน)
+                    </span>
+                  )}
                 </label>
                 <input
                   type="password"
@@ -316,7 +325,7 @@ export default function Teachers() {
                     setFormData({ ...formData, password: e.target.value })
                   }
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
-                  placeholder="รหัสผ่าน"
+                  placeholder={editingTeacher ? "เว้นว่างถ้าไม่เปลี่ยน" : "รหัสผ่าน"}
                 />
               </div>
               <button

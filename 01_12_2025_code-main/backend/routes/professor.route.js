@@ -66,12 +66,12 @@ pRouter.post("/create-professor", async (req, res) => {
       return res.json({ err: "รหัสผู้ใช้งานนี้ถูกใช้แล้ว" });
 
     const query = `
-      INSERT INTO professors (fullname, tel, username, password)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO professors (fullname, username, password)
+      VALUES ($1, $2, $3)
       RETURNING *
     `;
 
-    const result = await pool.query(query, [fullname, tel, username, password]);
+    const result = await pool.query(query, [fullname, username, password]);
 
     res.status(200).json({
       message: "เพิ่มข้อมูลอาจารย์สำเร็จ",
@@ -89,26 +89,24 @@ pRouter.post("/create-professor", async (req, res) => {
 pRouter.put("/update-professor/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { fullname, tel } = req.body;
-    if (!fullname || !tel) return res.json({ err: "กรอกช้อมูลให้ครบถ้วน" });
+    const { fullname, username, password } = req.body;
+    if (!fullname || !username)
+      return res.json({ err: "กรุณากรอกข้อมูลให้ครบถ้วน" });
 
-    const query = `
-      UPDATE professors 
-      SET fullname = $1, tel = $2
-      WHERE id = $3
-    `;
+    // ✅ ถ้าไม่ได้ส่ง password มา ก็ไม่อัปเดต password
+    const query = password
+      ? `UPDATE professors SET fullname=$1, username=$2, password=$3 WHERE id=$4 RETURNING *`
+      : `UPDATE professors SET fullname=$1, username=$2 WHERE id=$3 RETURNING *`;
 
-    const result = await pool.query(query, [fullname, tel, Number(id)]);
+    const params = password
+      ? [fullname, username, password, Number(id)]
+      : [fullname, username, Number(id)];
 
-    res.status(200).json({
-      message: "แก้ไขข้อมูลอาจารย์สำเร็จ",
-      data: result.rows[0],
-    });
+    const result = await pool.query(query, params);
+    res.status(200).json({ message: "แก้ไขข้อมูลสำเร็จ", data: result.rows[0] });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      error: "เกิดข้อผิดพลาดในการแก้ไขข้อมูลอาจารย์",
-    });
+    res.status(500).json({ error: "เกิดข้อผิดพลาด" });
   }
 });
 
