@@ -48,6 +48,7 @@ pRouter.get("/get-professor/:id", async (req, res) => {
 pRouter.post("/create-professor", async (req, res) => {
   try {
     const { fullname, username, password } = req.body;
+     console.log("req.body:", req.body)
 
     if (!fullname || !username || !password)
       return res.json({ err: "กรุณากรอกข้อมูลให้ครบถ้วน" });
