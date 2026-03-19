@@ -151,7 +151,10 @@ export default function Users() {
 
             </button>
             <div className="flex items-center gap-3">
-
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-sky-500 rounded-xl flex items-center justify-center shadow-lg">
+                <User className="w-7 h-7 text-white" />
+              </div>
+              <div>
                 <h1 className="text-2xl font-bold text-gray-800">
                   จัดการนักศึกษา
                 </h1>
