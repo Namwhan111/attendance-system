@@ -50,6 +50,9 @@ const Header = () => {
           {(token?.role == "3" || token?.role == "2") && (
             <Link to={"/users"}>จัดการนักศึกษา</Link>
           )}
+          {token?.role == "3" && (
+            <Link to={"/teachers"}>จัดการอาจารย์</Link>
+          )}
 
           <button
             onClick={handleLogout}
