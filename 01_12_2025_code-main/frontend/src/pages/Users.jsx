@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-   Trash2,
+  Trash2,
   Home,
   User,
   AlertCircle,
@@ -10,7 +10,7 @@ import {
   Save,
   Loader2,
   UserPlus,
-  } from "lucide-react";
+} from "lucide-react";
 import axios from "axios";
 import { API_URL } from "./Subject";
 import Header from "../components/header";
@@ -18,7 +18,7 @@ import Footer from "../components/footer";
 import Swal from "sweetalert2";
 
 export default function Users() {
-    const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState([]);
   const [load, setLoad] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -144,9 +144,9 @@ export default function Users() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-        
+
             <div className="flex items-center gap-3">
-            
+
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
                   จัดการนักศึกษา
@@ -175,7 +175,7 @@ export default function Users() {
                   นักศึกษาทั้งหมด: {students.length} คน
                 </span>
               </div>
-              <div className="text-sm bg-black bg-opacity-20 px-4 py-2 rounded-lg">
+              <div className="text-sm text-black bg-white bg-opacity-20 px-4 py-2 rounded-lg">
                 แสดง {students.length} รายการ
               </div>
             </div>
