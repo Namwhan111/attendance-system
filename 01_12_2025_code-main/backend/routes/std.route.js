@@ -421,4 +421,36 @@ stdRoute.post("/check-class", async (req, res) => {
   }
 });
 
+//ลงทะเบียนวิชาเรียน
+stdRoute.post("/enroll", async (req, res) => {
+  try {
+    const { student_id, course_id } = req.body;
+
+    if (!student_id || !course_id) {
+      return res.json({ err: "ข้อมูลไม่ครบ" });
+    }
+
+    // 🔹 กันลงซ้ำ
+    const check = await pool.query(
+      "SELECT * FROM enrollments WHERE student_id=$1 AND course_id=$2",
+      [student_id, course_id]
+    );
+
+    if (check.rows.length > 0) {
+      return res.json({ err: "ลงทะเบียนแล้ว" });
+    }
+
+    // 🔹 insert
+    await pool.query(
+      "INSERT INTO enrollments (student_id, course_id) VALUES ($1,$2)",
+      [student_id, course_id]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: "Enroll failed" });
+  }
+});
+
 export default stdRoute;
