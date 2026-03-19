@@ -71,31 +71,29 @@ export default function MyProfile() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-    try {
-      const data = new FormData();
-      data.append("student_id", formData.fullname);
-      data.append("fullname", formData.fullname);
-      data.append("major", formData.major);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
+  try {
+    const data = new FormData();
+    data.append("fullname", formData.fullname);  // ✅ แก้ตรงนี้
+    data.append("major", formData.major);
+    if (profileFile instanceof File) {           // ✅ ส่งรูปเฉพาะตอนเลือกไฟล์ใหม่
       data.append("profile", profileFile);
-
-      const res = await axios.put(
-        `${API_URL}/students/${formData.stundent_id}`,
-        data,
-      );
-      setMessage("บันทึกข้อมูลสำเร็จ!");
-      setIsEditing(false);
-      getData();
-    } catch (error) {
-      setMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    await axios.put(`${API_URL}/students/${formData.stundent_id}`, data);
+    setMessage("บันทึกข้อมูลสำเร็จ!");
+    setIsEditing(false);
+    getData();
+  } catch (error) {
+    setMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    console.error("Error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (load) {
     return (
