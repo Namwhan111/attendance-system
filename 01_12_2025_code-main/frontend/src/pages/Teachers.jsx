@@ -131,13 +131,7 @@ export default function Teachers() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => (location.href = "/dashboard")}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-gray-700 rounded-xl transition-all shadow-md hover:shadow-lg border border-blue-100"
-            >
-              <Home className="w-5 h-5 text-blue-600" />
-              <span className="font-medium">หน้าหลัก</span>
-            </button>
+             
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                 <UserCog className="w-7 h-7 text-white" />
