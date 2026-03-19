@@ -47,9 +47,9 @@ pRouter.get("/get-professor/:id", async (req, res) => {
 
 pRouter.post("/create-professor", async (req, res) => {
   try {
-    const { fullname, tel, username, password } = req.body;
+    const { fullname, username, password } = req.body;
 
-    if (!fullname || !tel || !username || !password)
+    if (!fullname || !username || !password)
       return res.json({ err: "กรุณากรอกข้อมูลให้ครบถ้วน" });
 
     const usernameExit = await pool.query(
