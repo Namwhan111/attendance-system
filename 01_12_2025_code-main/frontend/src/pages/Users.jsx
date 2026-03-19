@@ -175,7 +175,7 @@ export default function Users() {
                   นักศึกษาทั้งหมด: {students.length} คน
                 </span>
               </div>
-              <div className="text-sm bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+              <div className="text-sm bg-black bg-opacity-20 px-4 py-2 rounded-lg">
                 แสดง {students.length} รายการ
               </div>
             </div>
