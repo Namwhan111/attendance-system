@@ -37,7 +37,7 @@ const StudentAttendanceDetail = () => {
         major: data?.data[0]?.major,
         profile: data.data[0]?.profile,
       });
-      setAttendanceRecords(data?.statistics);
+      setAttendanceRecords(data?.data);
     } catch (error) {
       console.error(error);
       alert("เกิดข้อผิดพลาด");
@@ -301,7 +301,7 @@ const StudentAttendanceDetail = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {attendanceRecords.length === 0 ? (
+                {dates.length === 0 ? (
                   <tr>
                     <td colSpan="4" className="px-6 py-12 text-center">
                       <div className="text-gray-400">

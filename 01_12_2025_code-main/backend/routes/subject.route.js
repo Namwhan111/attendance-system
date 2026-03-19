@@ -211,4 +211,32 @@ WHERE student_id = $1
   }
 });
 
+subjectRoute.get("/get-attendance-by-course/:courseId", async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    const result = await pool.query(`
+      SELECT 
+        s.student_id,
+        s.fullname,
+
+        a.status,
+        a.checkin_time,
+        a.leave_file
+
+      FROM students s
+      LEFT JOIN attendance a
+        ON s.student_id = a.student_id
+        AND a.course_id = $1
+        AND DATE(a.checkin_time) = CURRENT_DATE
+    `, [courseId]);
+
+    res.json({ data: result.rows });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: "error" });
+  }
+});
+
 export default subjectRoute;

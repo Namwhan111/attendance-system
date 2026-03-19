@@ -521,4 +521,36 @@ stdRoute.post("/enroll", async (req, res) => {
   }
 });
 
+// เพิ่ม route ใหม่: ดึง attendance วันนี้ของห้องเรียน
+stdRoute.get("/attendance-today/:classId", async (req, res) => {
+  try {
+    const { classId } = req.params;
+
+    const result = await pool.query(
+      `SELECT 
+         a.attendance_id,
+         a.student_id,
+         s.fullname,
+         s.std_class_id,
+         a.checkin_time,
+         a.status,
+         a.leave_file
+       FROM attendance a
+       JOIN students s ON s.student_id = a.student_id
+       WHERE a.course_id = $1
+         AND DATE(a.checkin_time) = CURRENT_DATE
+       ORDER BY a.checkin_time ASC`,
+      [classId]
+    );
+
+    return res.status(200).json({
+      total: result.rows.length,
+      data: result.rows,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ err: "Internal server error" });
+  }
+});
+
 export default stdRoute;
