@@ -44,10 +44,12 @@ const Header = () => {
 
           {token?.role == 1 && <Link to={"/my-profile"}>ข้อมูลส่วนตัว</Link>}
 
-          <Link to={"/crud/subject"}>
-            {token?.role == 1 ? "เช็คชื่อ" : "จัดการรายวิชา"}
-          </Link>
-          {(token?.role == "3" || token?.role == "2") && (
+          {token?.role != 3 && (
+            <Link to={"/crud/subject"}>
+              {token?.role == 1 ? "เช็คชื่อ" : "จัดการรายวิชา"}
+            </Link>
+          )}
+          {token?.role == "2" && (
             <Link to={"/users"}>จัดการนักศึกษา</Link>
           )}
 
