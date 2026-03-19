@@ -49,10 +49,10 @@ export default function CourseCRUD() {
   const [editingCourse, setEditingCourse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    course_name: "",
-    teacher_id: "",   // ✅ เพิ่มตัวนี้
-    time_check: "",   // ✅ เพิ่มตัวนี้ด้วย
-  });
+  course_name: "",
+  teacher_id: "",   // ✅ เพิ่มตัวนี้
+  time_check: "",   // ✅ เพิ่มตัวนี้ด้วย
+});
 
   // เปลี่ยน URL ตามที่คุณตั้งค่าใน .env
 
@@ -296,38 +296,13 @@ export default function CourseCRUD() {
                                 </button>
                               </>
                             ) : (
-                              <>
-                                <button
-                                  onClick={async () => {
-                                    try {
-                                      const res = await axios.post(`${API_URL}/enroll`, {
-                                        student_id: token.student_id,
-                                        course_id: course.course_id,
-                                      });
-
-                                      if (res.data.err) {
-                                        return Swal.fire(res.data.err, "", "warning");
-                                      }
-
-                                      Swal.fire("ลงทะเบียนสำเร็จ", "", "success");
-                                    } catch (err) {
-                                      console.error(err);
-                                      Swal.fire("เกิดข้อผิดพลาด", "", "error");
-                                    }
-                                  }}
-                                  className="bg-green-500 text-white px-3 py-1 rounded"
-                                >
-                                  ลงทะเบียน
-                                </button>
-
-                                <Link
-                                  className="flex items-center gap-2 p-2 rounded-md text-white bg-blue-500"
-                                  to={`/class-detail/${course.course_id}/${token?.student_id}`}
-                                >
-                                  <FileText size={18} />
-                                  รายละเอียด
-                                </Link>
-                              </>
+                              <Link
+                                className="flex items-center gap-2 p-2 rounded-md text-white bg-blue-500"
+                                to={`/class-detail/${course.course_id}/${token?.student_id}`}
+                              >
+                                <FileText size={18} />
+                                รายละเอียด
+                              </Link>
                             )}
                             {token?.role == "2" && (
                               <Link

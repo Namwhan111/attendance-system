@@ -100,7 +100,7 @@ stdRoute.post("/create-std", async (req, res) => {
   VALUES ($1,$2,$3,$4,$5,$6)`,
       [fullName, studentId, username, password, "IT", "default.png"]
     );
-      await client.query("COMMIT");
+    await client.query("COMMIT");
 
     return res.status(200).json({ ok: true });
   } catch (error) {
@@ -436,8 +436,12 @@ stdRoute.post("/check-class", upload.single("leavDoc"), async (req, res) => {
       [stdId, classId]
     );
 
+    // 🔥 ถ้ายังไม่ enroll → สมัครให้เลย
     if (enrollCheck.rows.length === 0) {
-      return res.status(400).json({ err: "ยังไม่ได้ลงทะเบียนวิชานี้" });
+      await pool.query(
+        `INSERT INTO enrollments (student_id, course_id) VALUES ($1, $2)`,
+        [stdId, classId]
+      );
     }
 
     const checkinTime = new Date();
