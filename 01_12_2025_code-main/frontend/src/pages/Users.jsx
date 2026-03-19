@@ -1,31 +1,24 @@
 import { useEffect, useState } from "react";
 import {
-  Trash2,
-  UserPlus,
-  Search,
+   Trash2,
   Home,
   User,
   AlertCircle,
   GraduationCap,
-  Edit2,   // ✅ เพิ่ม
-  X,       // ✅ เพิ่ม
-  Save,    // ✅ เพิ่ม
-  Loader2, // ✅ เพิ่ม
-} from "lucide-react";
-import Swal from "sweetalert2";
+  Edit2,
+  X,
+  Save,
+  Loader2,
+  UserPlus,
+  } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "./Subject";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 
 export default function Users() {
-  const [students, setStudents] = useState([]);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [studentToDelete, setStudentToDelete] = useState(null);
-
+    const [students, setStudents] = useState([]);
   const [load, setLoad] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -37,6 +30,21 @@ export default function Users() {
     major: "",
     studentId: "",
   });
+
+  const getAll = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/students`);
+      setStudents(res.data.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoad(false);
+    }
+  };
+
+  useEffect(() => {
+    getAll();
+  }, []);
 
   const handleEdit = (student) => {
     setEditingStudent(student);
@@ -63,20 +71,25 @@ export default function Users() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.fullname || !formData.major) {
+    if (!formData.fullname || !formData.username || !formData.major) {
       return Swal.fire("กรุณากรอกข้อมูลให้ครบ", "", "warning");
     }
-    if (!editingStudent && (!formData.password || !formData.studentId || !formData.username)) {
+    if (!editingStudent && (!formData.password || !formData.studentId)) {
       return Swal.fire("กรุณากรอกข้อมูลให้ครบ", "", "warning");
     }
+
     try {
       setSaving(true);
       if (editingStudent) {
         const res = await axios.put(
           `${API_URL}/students/${editingStudent.student_id}`,
-          { fullname: formData.fullname, major: formData.major }
+          {
+            fullname: formData.fullname,
+            major: formData.major,
+          }
         );
-        if (res.data.err) return Swal.fire(res.data.err, "", "warning");
+        if (res.data.err)
+          return Swal.fire(res.data.err, "", "warning");
         Swal.fire("แก้ไขข้อมูลแล้ว", "", "success");
       } else {
         const res = await axios.post(`${API_URL}/create-std`, {
@@ -85,7 +98,8 @@ export default function Users() {
           username: formData.username,
           password: formData.password,
         });
-        if (res.data.err) return Swal.fire(res.data.err, "", "warning");
+        if (res.data.err)
+          return Swal.fire(res.data.err, "", "warning");
         Swal.fire("เพิ่มนักศึกษาแล้ว", "", "success");
       }
       getAll();
@@ -110,25 +124,24 @@ export default function Users() {
       denyButtonColor: "#6B7280",
     });
     if (!isConfirmed) return;
+
     try {
       await axios.delete(`${API_URL}/students/${id}`);
       Swal.fire("ลบข้อมูลแล้ว", "", "success");
       getAll();
     } catch (error) {
+      console.error(error);
       Swal.fire("เกิดข้อผิดพลาด", "", "error");
     }
   };
 
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setStudentToDelete(null);
-  };
+  if (load) return <p>กำลังโหลด...</p>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 py-8 px-4">
       <Header />
-      <div className="max-w-7xl mx-auto">
-        {/* Header with Back Button */}
+      <div className="max-w-7xl mx-auto mt-16">
+        {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -143,7 +156,9 @@ export default function Users() {
                 <User className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">จัดการนักศึกษา</h1>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  จัดการนักศึกษา
+                </h1>
                 <p className="text-sm text-gray-600">ดูและจัดการข้อมูลนักศึกษา</p>
               </div>
             </div>
@@ -174,21 +189,7 @@ export default function Users() {
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="p-6 bg-gradient-to-r from-blue-50 to-sky-50 border-b border-blue-100">
-            {/* <div className="relative max-w-xl">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="ค้นหา รหัสนักศึกษา, ชื่อ, หรือสาขาวิชา..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-white border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all text-gray-800"
-              />
-            </div> */}
-          </div>
-
-          {/* Students Table */}
+          {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-gray-50 to-blue-50">
@@ -203,7 +204,7 @@ export default function Users() {
                     สาขาวิชา
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    ชั้นปี
+                    Username
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
                     จัดการ
@@ -227,7 +228,7 @@ export default function Users() {
                         {student.major}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {student.year ? `ปี ${student.year}` : "-"}
+                        {student.username}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
@@ -239,7 +240,9 @@ export default function Users() {
                             <span className="font-medium">แก้ไข</span>
                           </button>
                           <button
-                            onClick={() => handleDelete(student.student_id, student.fullname)}
+                            onClick={() =>
+                              handleDelete(student.student_id, student.fullname)
+                            }
                             className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -254,12 +257,7 @@ export default function Users() {
                     <td colSpan="5" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-3 text-gray-500">
                         <AlertCircle className="w-12 h-12 text-gray-400" />
-                        <p className="text-lg font-medium">
-                          ไม่พบข้อมูลนักศึกษา
-                        </p>
-                        <p className="text-sm">
-                          ลองค้นหาด้วยคำอื่น หรือเพิ่มนักศึกษาใหม่
-                        </p>
+                        <p className="text-lg font-medium">ไม่พบข้อมูลนักศึกษา</p>
                       </div>
                     </td>
                   </tr>
@@ -268,96 +266,11 @@ export default function Users() {
             </table>
           </div>
 
-          {isModalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 to-sky-500 p-6 flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white">
-                    {editingStudent ? "แก้ไขข้อมูลนักศึกษา" : "เพิ่มนักศึกษาใหม่"}
-                  </h2>
-                  <button onClick={resetForm} className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg">
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-4">
-                  {!editingStudent && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">รหัสนักศึกษา</label>
-                      <input
-                        type="text"
-                        value={formData.studentId}
-                        onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
-                        placeholder="65XXXXXXX"
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">ชื่อ-นามสกุล</label>
-                    <input
-                      type="text"
-                      value={formData.fullname}
-                      onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
-                      placeholder="สมชาย ใจดี"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">สาขาวิชา</label>
-                    <input
-                      type="text"
-                      value={formData.major}
-                      onChange={(e) => setFormData({ ...formData, major: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
-                      placeholder="วิทยาการคอมพิวเตอร์"
-                    />
-                  </div>
-                  {!editingStudent && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
-                        <input
-                          type="text"
-                          value={formData.username}
-                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                          className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
-                          placeholder="student01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                        <input
-                          type="password"
-                          value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
-                          placeholder="รหัสผ่าน"
-                        />
-                      </div>
-                    </>
-                  )}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={saving}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 text-white rounded-xl transition-all shadow-md font-medium"
-                  >
-                    {saving ? <Loader2 className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />}
-                    บันทึก
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Footer Summary */}
+          {/* Footer */}
           {students.length > 0 && (
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
               <p className="text-sm text-gray-600">
                 แสดง{" "}
-                <span className="font-semibold text-gray-800">
-                  {students.length}
-                </span>{" "}
-                จาก{" "}
                 <span className="font-semibold text-gray-800">
                   {students.length}
                 </span>{" "}
@@ -368,59 +281,117 @@ export default function Users() {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-red-500 to-pink-500 px-6 py-4">
-              <div className="flex items-center gap-3 text-white">
-                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6" />
-                </div>
-                <h2 className="text-xl font-bold">ยืนยันการลบ</h2>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6">
-              <p className="text-gray-700 mb-2">
-                คุณต้องการลบนักศึกษาคนนี้ใช่หรือไม่?
-              </p>
-              <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">ชื่อ-นามสกุล</p>
-                <p className="font-semibold text-gray-800 mb-3">
-                  {studentToDelete?.fullname}
-                </p>
-                <p className="text-sm text-gray-600 mb-1">รหัสนักศึกษา</p>
-                <p className="font-semibold text-gray-800">
-                  {studentToDelete?.student_id}
-                </p>
-              </div>
-              <p className="text-sm text-red-600 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                การดำเนินการนี้ไม่สามารถย้อนกลับได้
-              </p>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="px-6 pb-6 flex gap-3">
+      {/* Modal เพิ่ม/แก้ไข */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-sky-500 p-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">
+                {editingStudent ? "แก้ไขข้อมูลนักศึกษา" : "เพิ่มนักศึกษาใหม่"}
+              </h2>
               <button
-                onClick={cancelDelete}
-                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-medium"
+                onClick={resetForm}
+                className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
               >
-                ยกเลิก
+                <X className="w-6 h-6" />
               </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* รหัสนักศึกษา — แสดงเฉพาะตอนเพิ่มใหม่ */}
+              {!editingStudent && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    รหัสนักศึกษา
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.studentId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, studentId: e.target.value })
+                    }
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                    placeholder="65XXXXXXX"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  ชื่อ-นามสกุล
+                </label>
+                <input
+                  type="text"
+                  value={formData.fullname}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullname: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                  placeholder="สมชาย ใจดี"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  สาขาวิชา
+                </label>
+                <input
+                  type="text"
+                  value={formData.major}
+                  onChange={(e) =>
+                    setFormData({ ...formData, major: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                  placeholder="วิทยาการคอมพิวเตอร์"
+                />
+              </div>
+              {/* Username และ Password — แสดงเฉพาะตอนเพิ่มใหม่ */}
+              {!editingStudent && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) =>
+                        setFormData({ ...formData, username: e.target.value })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                      placeholder="student01"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                      placeholder="รหัสผ่าน"
+                    />
+                  </div>
+                </>
+              )}
               <button
-                onClick={confirmDelete}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl transition-all shadow-md hover:shadow-lg font-medium"
+                onClick={handleSubmit}
+                disabled={saving}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 text-white rounded-xl transition-all shadow-md font-medium"
               >
-                ยืนยันการลบ
+                {saving ? (
+                  <Loader2 className="animate-spin w-5 h-5" />
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}
+                บันทึก
               </button>
             </div>
           </div>
         </div>
       )}
+
       <Footer />
     </div>
   );
