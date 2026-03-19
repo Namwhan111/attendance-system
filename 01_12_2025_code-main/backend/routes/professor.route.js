@@ -47,42 +47,34 @@ pRouter.get("/get-professor/:id", async (req, res) => {
 
 pRouter.post("/create-professor", async (req, res) => {
   try {
-    const { fullname, username, password } = req.body;
-     console.log("req.body:", req.body)
+    const { fullname, username, password, tel } = req.body;
+    console.log("create req.body:", req.body);
 
     if (!fullname || !username || !password)
       return res.json({ err: "กรุณากรอกข้อมูลให้ครบถ้วน" });
 
     const usernameExit = await pool.query(
-      "select id from professors where username = $1",
-      [username],
+      "select id from professors where username = $1", [username]
     );
     if (usernameExit.rows.length > 0)
       return res.json({ err: "รหัสผู้ใช้งานนี้ถูกใช้แล้ว" });
+
     const stdUsernameExit = await pool.query(
-      "select student_id from students where username = $1",
-      [username],
+      "select student_id from students where username = $1", [username]
     );
     if (stdUsernameExit.rows.length > 0)
       return res.json({ err: "รหัสผู้ใช้งานนี้ถูกใช้แล้ว" });
 
-    const query = `
-      INSERT INTO professors (fullname, username, password)
-      VALUES ($1, $2, $3)
-      RETURNING *
-    `;
+    const result = await pool.query(
+      `INSERT INTO professors (fullname, tel, username, password)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [fullname, tel || null, username, password]
+    );
 
-    const result = await pool.query(query, [fullname, username, password]);
-
-    res.status(200).json({
-      message: "เพิ่มข้อมูลอาจารย์สำเร็จ",
-      data: result.rows[0],
-    });
+    res.status(200).json({ message: "เพิ่มข้อมูลอาจารย์สำเร็จ", data: result.rows[0] });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      error: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลอาจารย์",
-    });
+    res.status(500).json({ error: "เกิดข้อผิดพลาด" });
   }
 });
 
@@ -90,18 +82,18 @@ pRouter.post("/create-professor", async (req, res) => {
 pRouter.put("/update-professor/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { fullname, username, password } = req.body;
+    const { fullname, username, password, tel } = req.body;
+    console.log("update req.body:", req.body);
+
     if (!fullname || !username)
       return res.json({ err: "กรุณากรอกข้อมูลให้ครบถ้วน" });
-
-    // ✅ ถ้าไม่ได้ส่ง password มา ก็ไม่อัปเดต password
-    const query = password
-      ? `UPDATE professors SET fullname=$1, username=$2, password=$3 WHERE id=$4 RETURNING *`
-      : `UPDATE professors SET fullname=$1, username=$2 WHERE id=$3 RETURNING *`;
+      const query = password
+      ? `UPDATE professors SET fullname=$1, username=$2, password=$3, tel=$4 WHERE id=$5 RETURNING *`
+      : `UPDATE professors SET fullname=$1, username=$2, tel=$3 WHERE id=$4 RETURNING *`;
 
     const params = password
-      ? [fullname, username, password, Number(id)]
-      : [fullname, username, Number(id)];
+      ? [fullname, username, password, tel || null, Number(id)]
+      : [fullname, username, tel || null, Number(id)];
 
     const result = await pool.query(query, params);
     res.status(200).json({ message: "แก้ไขข้อมูลสำเร็จ", data: result.rows[0] });
