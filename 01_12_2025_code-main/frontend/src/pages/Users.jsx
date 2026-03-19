@@ -7,7 +7,12 @@ import {
   User,
   AlertCircle,
   GraduationCap,
+  Edit2,   // ✅ เพิ่ม
+  X,       // ✅ เพิ่ม
+  Save,    // ✅ เพิ่ม
+  Loader2, // ✅ เพิ่ม
 } from "lucide-react";
+import Swal from "sweetalert2";
 import axios from "axios";
 import { API_URL } from "./Subject";
 import Header from "../components/header";
@@ -22,32 +27,95 @@ export default function Users() {
   const [studentToDelete, setStudentToDelete] = useState(null);
 
   const [load, setLoad] = useState(true);
-  const getAll = async () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    fullname: "",
+    username: "",
+    password: "",
+    major: "",
+    studentId: "",
+  });
+
+  const handleEdit = (student) => {
+    setEditingStudent(student);
+    setFormData({
+      fullname: student.fullname,
+      username: student.username,
+      password: "",
+      major: student.major,
+      studentId: student.std_class_id,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setEditingStudent(null);
+    setFormData({ fullname: "", username: "", password: "", major: "", studentId: "" });
+    setIsModalOpen(true);
+  };
+
+  const resetForm = () => {
+    setIsModalOpen(false);
+    setEditingStudent(null);
+    setFormData({ fullname: "", username: "", password: "", major: "", studentId: "" });
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.fullname || !formData.major) {
+      return Swal.fire("กรุณากรอกข้อมูลให้ครบ", "", "warning");
+    }
+    if (!editingStudent && (!formData.password || !formData.studentId || !formData.username)) {
+      return Swal.fire("กรุณากรอกข้อมูลให้ครบ", "", "warning");
+    }
     try {
-      const res = await axios.get(`${API_URL}/students`);
-      setStudents(res.data.data);
-      console.log("🚀 ~ getAll ~ res.data:", res.data.data);
+      setSaving(true);
+      if (editingStudent) {
+        const res = await axios.put(
+          `${API_URL}/students/${editingStudent.student_id}`,
+          { fullname: formData.fullname, major: formData.major }
+        );
+        if (res.data.err) return Swal.fire(res.data.err, "", "warning");
+        Swal.fire("แก้ไขข้อมูลแล้ว", "", "success");
+      } else {
+        const res = await axios.post(`${API_URL}/create-std`, {
+          fullName: formData.fullname,
+          studentId: formData.studentId,
+          username: formData.username,
+          password: formData.password,
+        });
+        if (res.data.err) return Swal.fire(res.data.err, "", "warning");
+        Swal.fire("เพิ่มนักศึกษาแล้ว", "", "success");
+      }
+      getAll();
+      resetForm();
     } catch (error) {
       console.error(error);
+      Swal.fire("เกิดข้อผิดพลาด", "", "error");
     } finally {
-      setLoad(false);
+      setSaving(false);
     }
   };
-  useEffect(() => {
-    getAll();
-  }, []);
-  if (load) return <p>กำลังโหลด...</p>;
 
-  const confirmDelete = async (id) => {
+  const handleDelete = async (id, name) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "ยืนยันการลบ",
+      text: `ต้องการลบ ${name} ใช่หรือไม่?`,
+      icon: "warning",
+      showDenyButton: true,
+      confirmButtonText: "ลบ",
+      denyButtonText: "ยกเลิก",
+      confirmButtonColor: "#EF4444",
+      denyButtonColor: "#6B7280",
+    });
+    if (!isConfirmed) return;
     try {
-      // ส่งคำขอลบไปยัง API
       await axios.delete(`${API_URL}/students/${id}`);
-
-      // ลบออกจาก state
+      Swal.fire("ลบข้อมูลแล้ว", "", "success");
       getAll();
     } catch (error) {
-      console.error("Error deleting student:", error);
-      alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+      Swal.fire("เกิดข้อผิดพลาด", "", "error");
     }
   };
 
@@ -61,26 +129,32 @@ export default function Users() {
       <Header />
       <div className="max-w-7xl mx-auto">
         {/* Header with Back Button */}
-        <div className="mb-6 flex items-center gap-4">
-          <button
-            onClick={() => (location.href = "/dashboard")}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-gray-700 rounded-xl transition-all shadow-md hover:shadow-lg border border-blue-100"
-          >
-            <Home className="w-5 h-5 text-blue-600" />
-            <span className="font-medium">หน้าหลัก</span>
-          </button>
-
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-sky-500 rounded-xl flex items-center justify-center shadow-lg">
-              <User className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                จัดการนักศึกษา
-              </h1>
-              <p className="text-sm text-gray-600">ดูและจัดการข้อมูลนักศึกษา</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => (location.href = "/dashboard")}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-gray-700 rounded-xl transition-all shadow-md hover:shadow-lg border border-blue-100"
+            >
+              <Home className="w-5 h-5 text-blue-600" />
+              <span className="font-medium">หน้าหลัก</span>
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-sky-500 rounded-xl flex items-center justify-center shadow-lg">
+                <User className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">จัดการนักศึกษา</h1>
+                <p className="text-sm text-gray-600">ดูและจัดการข้อมูลนักศึกษา</p>
+              </div>
             </div>
           </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-sky-500 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-sky-600 transition-all shadow-lg"
+          >
+            <UserPlus className="w-5 h-5" />
+            เพิ่มนักศึกษา
+          </button>
         </div>
 
         {/* Main Card */}
@@ -156,13 +230,22 @@ export default function Users() {
                         {student.year ? `ปี ${student.year}` : "-"}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDeleteClick(student)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="font-medium">ลบ</span>
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(student)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                            <span className="font-medium">แก้ไข</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(student.student_id, student.fullname)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span className="font-medium">ลบ</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -184,6 +267,87 @@ export default function Users() {
               </tbody>
             </table>
           </div>
+
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-500 to-sky-500 p-6 flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-white">
+                    {editingStudent ? "แก้ไขข้อมูลนักศึกษา" : "เพิ่มนักศึกษาใหม่"}
+                  </h2>
+                  <button onClick={resetForm} className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className="p-6 space-y-4">
+                  {!editingStudent && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">รหัสนักศึกษา</label>
+                      <input
+                        type="text"
+                        value={formData.studentId}
+                        onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                        placeholder="65XXXXXXX"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">ชื่อ-นามสกุล</label>
+                    <input
+                      type="text"
+                      value={formData.fullname}
+                      onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                      placeholder="สมชาย ใจดี"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">สาขาวิชา</label>
+                    <input
+                      type="text"
+                      value={formData.major}
+                      onChange={(e) => setFormData({ ...formData, major: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                      placeholder="วิทยาการคอมพิวเตอร์"
+                    />
+                  </div>
+                  {!editingStudent && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
+                        <input
+                          type="text"
+                          value={formData.username}
+                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                          className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                          placeholder="student01"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                        <input
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none transition-all"
+                          placeholder="รหัสผ่าน"
+                        />
+                      </div>
+                    </>
+                  )}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={saving}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 text-white rounded-xl transition-all shadow-md font-medium"
+                  >
+                    {saving ? <Loader2 className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />}
+                    บันทึก
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer Summary */}
           {students.length > 0 && (
