@@ -25,8 +25,7 @@ export default function Login() {
       } else {
         const res = await axios.post(
           `${API_URL}/login`,
-          { username, password },
-          { params: { type: whoLoading } },
+          { username, password }
         );
         if (res.data.err) return alert(res.data.err);
         if (res.status === 200) {
@@ -51,14 +50,18 @@ export default function Login() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("loginToken")?.data;
-    if (token)
+    const token = JSON.parse(localStorage.getItem("loginToken"));
+
+    if (token) {
+      const role = token?.data?.role;
+
       location.href =
-        token?.role == "3"
+        role == 3
           ? "/dashboard"
-          : token?.role == "2"
+          : role == 2
             ? "/crud/subject"
             : "/my-profile";
+    }
   }, []);
 
   return (

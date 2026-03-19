@@ -56,37 +56,100 @@ stdRoute.post("/create-easy", async (req, res) => {
   }
 });
 
+// stdRoute.post("/login", async (req, res) => {
+//   try {
+//     const { username, password } = req.body;
+
+//     console.log("login:", username, password);
+
+//     let role = 1;
+//     let query = "SELECT * FROM students WHERE username = $1";
+//     let result = await pool.query(query, [username]);
+
+//     if (result.rows.length > 0) {
+//       if (result.rows[0].password !== password) {
+//         return res.status(401).json({ err: "password incorrect" });
+//       }
+//     } else {
+//       query = "SELECT * FROM professors WHERE username = $1";
+//       role = 2;
+//       result = await pool.query(query, [username]);
+
+//       if (result.rows.length === 0) {
+//         return res.status(401).json({ err: "user not found" });
+//       }
+
+//       if (result.rows[0].password !== password) {
+//         return res.status(401).json({ err: "password incorrect" });
+//       }
+//     }
+
+//     return res.status(200).json({
+//       data: { ...result.rows[0], role },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ err: "Internal server error" });
+//   }
+// });
+
 stdRoute.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
     console.log("login:", username, password);
 
-    let role = 1;
-    let query = "SELECT * FROM students WHERE username = $1";
-    let result = await pool.query(query, [username]);
+    // 🔹 1. หาใน students
+    let result = await pool.query(
+      "SELECT * FROM students WHERE username = $1",
+      [username]
+    );
 
     if (result.rows.length > 0) {
       if (result.rows[0].password !== password) {
         return res.status(401).json({ err: "password incorrect" });
       }
-    } else {
-      query = "SELECT * FROM professors WHERE username = $1";
-      role = 2;
-      result = await pool.query(query, [username]);
 
-      if (result.rows.length === 0) {
-        return res.status(401).json({ err: "user not found" });
-      }
+      return res.status(200).json({
+        data: { ...result.rows[0], role: 1 },
+      });
+    }
 
+    // 🔹 2. หาใน professors
+    result = await pool.query(
+      "SELECT * FROM professors WHERE username = $1",
+      [username]
+    );
+
+    if (result.rows.length > 0) {
       if (result.rows[0].password !== password) {
         return res.status(401).json({ err: "password incorrect" });
       }
+
+      return res.status(200).json({
+        data: { ...result.rows[0], role: 2 },
+      });
     }
 
-    return res.status(200).json({
-      data: { ...result.rows[0], role },
-    });
+    // 🔹 3. หาใน users (admin หรือ user อื่น)
+    result = await pool.query(
+      "SELECT * FROM users WHERE username = $1",
+      [username]
+    );
+
+    if (result.rows.length > 0) {
+      if (result.rows[0].password !== password) {
+        return res.status(401).json({ err: "password incorrect" });
+      }
+
+      return res.status(200).json({
+        data: { ...result.rows[0], role: result.rows[0].role_id },
+      });
+    }
+
+    // ❌ ไม่เจอเลย
+    return res.status(401).json({ err: "user not found" });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ err: "Internal server error" });
