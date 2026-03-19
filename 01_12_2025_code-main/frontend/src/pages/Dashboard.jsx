@@ -31,7 +31,7 @@ function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [tableData, setTableData] = useState([]);
+  
   // const [stats, setStats] = useState({});
 
   // Sample data
