@@ -144,12 +144,9 @@ export default function Users() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => (location.href = "/dashboard")}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-gray-700 rounded-xl transition-all shadow-md hover:shadow-lg border border-blue-100"
-            >
-
-            </button>
+            
+  
+        
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-sky-500 rounded-xl flex items-center justify-center shadow-lg">
                 <User className="w-7 h-7 text-white" />
