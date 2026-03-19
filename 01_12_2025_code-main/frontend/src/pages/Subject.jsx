@@ -49,10 +49,10 @@ export default function CourseCRUD() {
   const [editingCourse, setEditingCourse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    course_id: "",
-    course_name: "",
-    teacher_name: "",
-  });
+  course_name: "",
+  teacher_id: "",   // ✅ เพิ่มตัวนี้
+  time_check: "",   // ✅ เพิ่มตัวนี้ด้วย
+});
 
   // เปลี่ยน URL ตามที่คุณตั้งค่าใน .env
 
@@ -89,10 +89,9 @@ export default function CourseCRUD() {
 
       if (editingCourse) {
         // Update existing course
-        const res = await axios.put(
-          `${API_URL}/update-subject/${editingCourse.course_id}`,
-          formData,
-        );
+        const { course_id, ...data } = formData;
+
+        const res = await axios.post(`${API_URL}/create-subject`, data);
 
         if (res.data.err) {
           return Swal.fire(res.data.err, "ไม่สามารถบันทึกได้", "warning");
@@ -254,10 +253,9 @@ export default function CourseCRUD() {
                         <td className="px-6 py-4 text-gray-800 font-medium">
                           {token?.role == "1" ? (
                             <Link
-                              to={`/check-manual/${course.course_id}/${
-                                JSON.parse(localStorage.getItem("loginToken"))
-                                  .data?.student_id
-                              }`}
+                              to={`/check-manual/${course.course_id}/${JSON.parse(localStorage.getItem("loginToken"))
+                                .data?.student_id
+                                }`}
                               className="hover:text-blue-500 hover:underline"
                             >
                               {" "}
@@ -413,18 +411,18 @@ export default function CourseCRUD() {
                       อาจารย์ผู้สอน
                     </label>
                     <select
-                      value={formData.teacher_id}
-                      onChange={(option) =>
+                      value={formData.teacher_id || ""}
+                      onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          teacher_id: option.target.value,
+                          teacher_id: e.target.value,   // ✅ ใช้ id ตรง ๆ
                         }))
                       }
                       className="w-full p-2 rounded-lg border border-gray-200 outline"
                     >
-                      <option disabled>เลือกอาจารย์</option>
+                      <option value="">เลือกอาจารย์</option>   {/* 🔥 ต้องมี */}
                       {teachers.map((t, index) => (
-                        <option value={t?.id} key={index}>
+                        <option value={t.id} key={index}>
                           {t.fullname}
                         </option>
                       ))}
