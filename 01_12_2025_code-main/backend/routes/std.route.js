@@ -96,19 +96,18 @@ stdRoute.post("/create-std", async (req, res) => {
     // 🔹 insert students
     await client.query(
       `INSERT INTO students 
-      (fullname,std_class_id,username,password,major) 
-      VALUES ($1,$2,$3,$4,$5)`,
-      [fullName, studentId, username, password, "IT"]
+  (fullname,std_class_id,username,password,major,profile) 
+  VALUES ($1,$2,$3,$4,$5,$6)`,
+      [fullName, studentId, username, password, "IT", "default.png"]
     );
-
-    await client.query("COMMIT");
+      await client.query("COMMIT");
 
     return res.status(200).json({ ok: true });
-       } catch (error) {
+  } catch (error) {
     await client.query("ROLLBACK");
     console.error(error);
     return res.status(500).json({ err: "สมัครไม่สำเร็จ" });
-        } finally {
+  } finally {
     client.release();
   }
 });
